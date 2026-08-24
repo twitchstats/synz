@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>TOP 3 CHATTERS DAILY — SYNZCHILL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800;900&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root{
+    --void:#080a17;
+    --glass-top:rgba(16,17,36,.9);
+    --glass-bottom:rgba(6,7,15,.76);
+    --hairline:rgba(255,255,255,.08);
+    --violet:#7c5cff;
+    --violet-soft:#c7b8ff;
+    --gold:#f5c24c;
+    --silver:#d6d3e6;
+    --bronze:#e08a52;
+    --text:#f5f2ff;
+    --text-dim:#8f84b8;
+    --bg:transparent;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background:var(--bg);
+    font-family:'Manrope', sans-serif;
+    overflow:hidden;
+  }
+  #wrap{
+    width:452px;
+    padding:22px 24px 24px;
+    position:relative;
+    isolation:isolate;
+  }
+  /* subtle film-grain texture — the one tactile flourish */
+  #wrap::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    opacity:.05;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    z-index:5;
+  }
+
+  /* ---------- header ---------- */
+  #title{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-weight:800;
+    font-size:27px;
+    letter-spacing:-0.6px;
+    color:var(--text);
+    background:linear-gradient(100deg, #ffffff 10%, var(--violet-soft) 130%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 16px rgba(124,92,255,.4));
+    display:inline-block;
+  }
+  #statuschip{
+    margin-top:11px;
+    margin-bottom:18px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    background:rgba(8,9,20,.55);
+    border:1px solid var(--hairline);
+    border-radius:100px;
+    padding:5px 13px 5px 10px;
+    backdrop-filter:blur(6px);
+  }
+  #dot{
+    width:7px; height:7px; border-radius:50%;
+    background:#ff4d4d;
+    box-shadow:0 0 6px #ff4d4d;
+    transition:all .3s ease;
+    flex-shrink:0;
+  }
+  #dot.live{
+    background:#59e9ff;
+    box-shadow:0 0 6px #59e9ff, 0 0 14px #59e9ff;
+    animation:pulse 1.4s infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  #status{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.3px;
+    color:var(--text);
+    text-shadow:0 1px 2px rgba(0,0,0,.9);
+  }
+
+  /* ---------- rows ---------- */
+  #list{ display:flex; flex-direction:column; gap:11px; }
+
+  .row{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    background:linear-gradient(155deg, var(--glass-top), var(--glass-bottom));
+    border:1px solid var(--hairline);
+    border-radius:14px;
+    padding:11px 17px 11px 14px;
+    overflow:hidden;
+    transition:transform .35s ease, border-color .35s ease;
+  }
+  .row:hover{ transform:translateX(3px); }
+  .row.rank1{
+    border-color:rgba(245,194,76,.5);
+    padding-top:13px; padding-bottom:13px;
+    box-shadow:0 10px 30px -12px rgba(245,194,76,.25);
+  }
+  .row.rank2{ border-color:rgba(214,211,230,.28); }
+  .row.rank3{ border-color:rgba(224,138,82,.32); }
+
+  /* connector thread linking each node to the one above it */
+  .row:not(:first-child)::before{
+    content:"";
+    position:absolute;
+    top:-11px; height:11px; left:31px;
+    width:2px;
+    background:linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.06));
+    z-index:2;
+  }
+
+  /* slow, quiet shimmer reserved for #1 only */
+  .row.rank1::after{
+    content:"";
+    position:absolute;
+    top:0; left:-70%;
+    width:35%; height:100%;
+    background:linear-gradient(100deg, transparent, rgba(245,194,76,.1), transparent);
+    animation:sweep 4.5s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes sweep{
+    0%{ left:-70%; } 60%{ left:130%; } 100%{ left:130%; }
+  }
+
+  .bar{
+    position:absolute;
+    left:0; bottom:0;
+    height:2px;
+    background:var(--violet);
+    width:0%;
+    opacity:.6;
+    transition:width .6s cubic-bezier(.22,1,.36,1);
+  }
+  .rank1 .bar{ background:var(--gold); }
+  .rank2 .bar{ background:var(--silver); }
+  .rank3 .bar{ background:var(--bronze); }
+
+  /* ---------- rail node (rank indicator) ---------- */
+  .node{
+    position:relative;
+    z-index:2;
+    width:34px; height:34px;
+    flex-shrink:0;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:13px;
+    color:var(--text);
+    background:rgba(255,255,255,.04);
+    border:1.5px solid rgba(255,255,255,.16);
+  }
+  .rank1 .node{ border-color:var(--gold); color:var(--gold); box-shadow:0 0 10px rgba(245,194,76,.35); }
+  .rank2 .node{ border-color:var(--silver); color:var(--silver); }
+  .rank3 .node{ border-color:var(--bronze); color:var(--bronze); }
+
+  /* ---------- avatar ---------- */
+  .avatar-wrap{
+    position:relative;
+    width:42px;
+    height:42px;
+    flex-shrink:0;
+    z-index:2;
+  }
+  .rank1 .avatar-wrap{ width:46px; height:46px; }
+  .rank1 .avatar-wrap::before{
+    content:"";
+    position:absolute;
+    inset:-3px;
+    border-radius:50%;
+    background:conic-gradient(from 0deg, var(--gold), transparent 30%, transparent 70%, var(--gold));
+    animation:spin 3.2s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .avatar{
+    position:relative;
+    z-index:1;
+    width:100%; height:100%;
+    border-radius:50%;
+    object-fit:cover;
+    display:block;
+    background:#241a3a;
+    border:2px solid var(--void);
+  }
+  .crown{
+    position:absolute;
+    top:-14px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:3;
+    filter:drop-shadow(0 0 5px rgba(245,194,76,.9));
+  }
+
+  /* ---------- text ---------- */
+  .info{ flex:1; z-index:2; min-width:0; }
+  .name{
+    font-family:'Manrope', sans-serif;
+    font-weight:800;
+    font-size:15px;
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    text-shadow:0 1px 3px rgba(0,0,0,.6);
+  }
+  .msglabel{
+    font-size:10px;
+    font-weight:600;
+    color:var(--text-dim);
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    margin-top:2px;
+  }
+  .count{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:19px;
+    color:var(--violet-soft);
+    z-index:2;
+    text-shadow:0 0 8px rgba(124,92,255,.5);
+    min-width:36px;
+    text-align:right;
+  }
+  .rank1 .count{ color:var(--gold); text-shadow:0 0 8px rgba(245,194,76,.5); }
+  .empty{
+    color:var(--text-dim);
+    font-size:13px;
+    font-weight:600;
+    padding:10px 4px 4px;
+  }
+
+  /* ---------- footer ---------- */
+  #footer{
+    display:flex;
+    gap:10px;
+    margin-top:15px;
+  }
+  .stat{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(6,7,16,.85);
+    border:1px solid var(--hairline);
+    border-radius:9px;
+    padding:6px 11px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    font-weight:700;
+    color:#ffffff;
+  }
+  .stat svg{ opacity:.9; flex-shrink:0; }
+  .stat b{ color:var(--violet-soft); font-weight:800; }
+  .stat .statlabel{
+    font-family:'Manrope', sans-serif;
+    font-weight:700;
+    font-size:11.5px;
+    letter-spacing:.1px;
+    color:#ffffff;
+  }
+</style>
+</head>
+<body>
+
+<div id="wrap">
+  <div id="title">Top 3 за день</div>
+  <div id="statuschip"><span id="dot"></span> <span id="status">подключение...</span></div>
+
+  <div id="list">
+    <div class="empty">Ждём сообщения в чате...</div>
+  </div>
+
+  <div id="footer">
+    <span class="stat">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <b id="totalMsgsNum">0</b>&nbsp;<span class="statlabel">сообщений</span>
+    </span>
+    <span class="stat">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <b id="totalUsersNum">0</b>&nbsp;<span class="statlabel">чаттеров</span>
+    </span>
+  </div>
+</div>
+
+<!-- Скрытый инпут для восстановления статы из бэкапа. Не отображается на трансляции. -->
+<input type="file" id="importFile" accept="application/json" style="display:none" />
+
+<script>
+const CHANNEL = "SynzChill"; 
+const STORAGE_KEY = "twitch_top3_synzchill_daily";
+const PERIOD_MS = 24 * 60 * 60 * 1000; // ровно 24 часа
+const PERIOD_CHECK_INTERVAL_MS = 30 * 1000; // как часто проверяем истечение периода
+
+let stats = {};        
+let totalMessages = 0;
+let periodStart = Date.now();
+
+// Истёк ли 24-часовой период с момента periodStart
+function periodExpired(start, now){
+  return (now - start) >= PERIOD_MS;
+}
+
+let ws = null;
+let reconnectDelay = 1000;
+const MAX_RECONNECT_DELAY = 15000;
+
+const dotEl = document.getElementById('dot');
+const statusEl = document.getElementById('status');
+const listEl = document.getElementById('list');
+const totalMsgsNumEl = document.getElementById('totalMsgsNum');
+const totalUsersNumEl = document.getElementById('totalUsersNum');
+
+// Загрузка данных из памяти
+function loadStats() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const savedPeriodStart = parsed.periodStart || Date.now();
+      if (periodExpired(savedPeriodStart, Date.now())) {
+        // Прошло 24 часа — сбрасываем
+        resetStats();
+      } else {
+        stats = parsed.stats || {};
+        totalMessages = parsed.totalMessages || 0;
+        periodStart = savedPeriodStart;
+      }
+    }
+  } catch(e) {
+    console.error("Ошибка загрузки сохранений", e);
+  }
+}
+
+// Сохранение данных в память
+function saveStats() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      stats,
+      totalMessages,
+      periodStart
+    }));
+  } catch(e) {
+    console.error("Ошибка сохранения", e);
+  }
+}
+
+function resetStats() {
+  stats = {};
+  totalMessages = 0;
+  periodStart = Date.now();
+  saveStats();
+  render();
+  scheduleReload(); // пересчитываем момент следующей перезагрузки от нового periodStart
+}
+
+// ==== Бэкап / восстановление в файл ====
+// Работает через горячие клавиши, чтобы кнопки не попадали в кадр трансляции.
+// В OBS: правый клик по источнику → Interact → нажать клавишу.
+
+function exportStats(){
+  try {
+    const payload = { channel: CHANNEL, exportedAt: new Date().toISOString(), stats, totalMessages, periodStart };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `top3_${CHANNEL}_backup_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus('бэкап сохранён ✓', dotEl.classList.contains('live'));
+    setTimeout(() => setStatus('в эфире — ' + CHANNEL.toUpperCase(), true), 2000);
+  } catch(e) {
+    console.error("Ошибка экспорта", e);
+  }
+}
+
+function importStats(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      stats = parsed.stats || {};
+      totalMessages = parsed.totalMessages || 0;
+      periodStart = parsed.periodStart || Date.now();
+      saveStats();
+      render();
+      setStatus('бэкап восстановлен ✓', dotEl.classList.contains('live'));
+      setTimeout(() => setStatus('в эфире — ' + CHANNEL.toUpperCase(), true), 2000);
+    } catch(e) {
+      console.error("Ошибка импорта: неверный файл", e);
+      setStatus('ошибка импорта файла', false);
+    }
+  };
+  reader.readAsText(file);
+}
+
+const importFileEl = document.getElementById('importFile');
+importFileEl.addEventListener('change', () => {
+  if(importFileEl.files && importFileEl.files[0]){
+    importStats(importFileEl.files[0]);
+  }
+  importFileEl.value = '';
+});
+
+document.addEventListener('keydown', (e) => {
+  // Игнорируем, если фокус в текстовом поле (на будущее, если появится ввод)
+  if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  if(e.key === 'e' || e.key === 'E'){
+    exportStats();
+  }
+  if(e.key === 'i' || e.key === 'I'){
+    importFileEl.click();
+  }
+});
+
+function setStatus(text, live){
+  statusEl.textContent = text;
+  dotEl.classList.toggle('live', !!live);
+}
+
+function connect(){
+  setStatus('подключение...', false);
+  ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+
+  ws.onopen = () => {
+    const nick = 'justinfan' + Math.floor(10000 + Math.random()*89999);
+    ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    ws.send('PASS SCHMOOPIIE');
+    ws.send('NICK ' + nick);
+    ws.send('JOIN #' + CHANNEL.toLowerCase());
+  };
+
+  ws.onmessage = (event) => {
+    const lines = event.data.split('\r\n').filter(Boolean);
+    for(const line of lines){
+      handleLine(line);
+    }
+  };
+
+  ws.onclose = () => {
+    setStatus('отключено, переподключение...', false);
+    scheduleReconnect();
+  };
+
+  ws.onerror = () => {
+    setStatus('ошибка соединения...', false);
+    try{ ws.close(); }catch(e){}
+  };
+}
+
+function scheduleReconnect(){
+  setTimeout(connect, reconnectDelay);
+  reconnectDelay = Math.min(reconnectDelay * 1.6, MAX_RECONNECT_DELAY);
+}
+
+function handleLine(line){
+  if(line.startsWith('PING')){
+    ws.send('PONG :tmi.twitch.tv');
+    return;
+  }
+
+  if(line.includes(' 366 ') || line.includes('JOIN #')){
+    setStatus('в эфире — ' + CHANNEL.toUpperCase(), true);
+    reconnectDelay = 1000;
+  }
+
+  if(line.includes('PRIVMSG')){
+    const msg = parsePrivmsg(line);
+    if(msg) registerMessage(msg);
+  }
+}
+
+function parsePrivmsg(line){
+  let tags = {};
+  let rest = line;
+
+  if(line.startsWith('@')){
+    const spaceIdx = line.indexOf(' ');
+    const tagStr = line.slice(1, spaceIdx);
+    rest = line.slice(spaceIdx + 1);
+    tagStr.split(';').forEach(pair => {
+      const eq = pair.indexOf('=');
+      if(eq > -1){
+        tags[pair.slice(0, eq)] = pair.slice(eq + 1);
+      }
+    });
+  }
+
+  const match = rest.match(/^:([^!]+)!/);
+  if(!match) return null;
+  const login = match[1].toLowerCase();
+
+  const msgMatch = rest.match(/PRIVMSG #[^ ]+ :(.*)/);
+  const text = msgMatch ? msgMatch[1] : '';
+
+  const displayName = tags['display-name'] && tags['display-name'].length
+    ? tags['display-name']
+    : login;
+  const color = tags['color'] && tags['color'].length ? tags['color'] : null;
+
+  return { login, displayName, color, text };
+}
+
+function registerMessage(msg){
+  // Ручной сброс топа командой !resettop от стримера
+  if(msg.text.trim() === '!resettop' && msg.login === CHANNEL.toLowerCase()) {
+    resetStats();
+    return; // Не считаем команду сброса за обычное сообщение
+  }
+
+  // Обновление статы
+  if(!stats[msg.login]){
+    stats[msg.login] = { name: msg.displayName, color: msg.color, count: 0 };
+  }
+  stats[msg.login].name = msg.displayName;
+  if(msg.color) stats[msg.login].color = msg.color;
+  stats[msg.login].count += 1;
+  totalMessages += 1;
+
+  saveStats();
+  render();
+}
+
+function fallbackColor(seed){
+  const palette = ['#9146FF','#bf94ff','#00e5ff','#ff7ce0','#ffd23f','#ff6b6b','#6bd8ff'];
+  let hash = 0;
+  for(let i=0;i<seed.length;i++) hash = seed.charCodeAt(i) + ((hash<<5)-hash);
+  return palette[Math.abs(hash) % palette.length];
+}
+
+let lastRenderKey = '';
+
+function render(){
+  const entries = Object.entries(stats)
+    .map(([login, v]) => ({ login, ...v }))
+    .sort((a,b) => b.count - a.count)
+    .slice(0, 3);
+
+  const key = entries.map(e => e.login + ':' + e.count).join('|');
+
+  totalMsgsNumEl.textContent = totalMessages;
+  totalUsersNumEl.textContent = Object.keys(stats).length;
+
+  if(entries.length === 0){
+    listEl.innerHTML = '<div class="empty">Ждём сообщения в чате...</div>';
+    return;
+  }
+
+  const maxCount = entries[0].count || 1;
+  const medals = ['r1','r2','r3'];
+  const rankNum = ['1','2','3'];
+
+  const crownSvg = `<svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+      <path d="M1 13L2.4 4.6 6.6 8.4 10 2 13.4 8.4 17.6 4.6 19 13H1Z" fill="url(#cg)" stroke="#F5C24C" stroke-width="0.6" stroke-linejoin="round"/>
+      <defs><linearGradient id="cg" x1="1" y1="2" x2="19" y2="13"><stop stop-color="#FFE9AE"/><stop offset="1" stop-color="#F5C24C"/></linearGradient></defs>
+    </svg>`;
+
+  listEl.innerHTML = entries.map((e, i) => {
+    const pct = Math.max(8, Math.round((e.count / maxCount) * 100));
+    const color = e.color || fallbackColor(e.login);
+    const initialsUrl = initialsAvatar(e.name, color);
+    const crown = i === 0 ? `<div class="crown">${crownSvg}</div>` : '';
+    return `
+      <div class="row rank${i+1}">
+        <div class="node">${rankNum[i]}</div>
+        <div class="avatar-wrap">
+          ${crown}
+          <img class="avatar" src="${initialsUrl}" data-login="${e.login}"
+               onerror="this.onerror=null; this.src='${initialsUrl}';" />
+        </div>
+        <div class="info">
+          <div class="name" style="color:${color}">${escapeHtml(e.name)}</div>
+          <div class="msglabel">сообщений в чате</div>
+        </div>
+        <div class="count">${e.count}</div>
+        <div class="bar" style="width:${pct}%"></div>
+      </div>
+    `;
+  }).join('');
+
+  loadRealAvatars(entries);
+
+  lastRenderKey = key;
+}
+
+// Аватарка-заглушка с инициалом, пока не подгрузилась настоящая
+function initialsAvatar(name, color){
+  const initial = encodeURIComponent((name || '?').trim().charAt(0).toUpperCase() || '?');
+  const bg = (color || '#9146FF').replace('#','');
+  return `https://ui-avatars.com/api/?name=${initial}&background=${bg}&color=fff&bold=true&size=96`;
+}
+
+// Кэш реальных аватарок Twitch, чтобы не дёргать сервис лишний раз
+const avatarCache = {};
+
+async function loadRealAvatars(entries){
+  for(const e of entries){
+    if(avatarCache[e.login]){
+      applyAvatar(e.login, avatarCache[e.login]);
+      continue;
+    }
+    fetchTwitchAvatar(e.login);
+  }
+}
+
+function fetchTwitchAvatar(login){
+  // Публичный сервис без токенов — отдаёт прямую ссылку на CDN-аватар Twitch
+  fetch('https://decapi.me/twitch/avatar/' + login)
+    .then(r => r.text())
+    .then(url => {
+      url = url.trim();
+      if(url && url.startsWith('http')){
+        avatarCache[login] = url;
+        applyAvatar(login, url);
+      }
+    })
+    .catch(() => {}); // остаётся заглушка с инициалом
+}
+
+function applyAvatar(login, url){
+  const img = listEl.querySelector(`img[data-login="${CSS.escape(login)}"]`);
+  if(img && img.src !== url) img.src = url;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// Автообновление раз в 24 часа: виджет в OBS обычно не перезагружается,
+// поэтому периодически проверяем, не истёк ли 24-часовой период с момента
+// periodStart, и если истёк — сбрасываем статистику сами, без перезапуска источника.
+function checkPeriodExpired(){
+  if(periodExpired(periodStart, Date.now())){
+    resetStats();
+  }
+}
+setInterval(checkPeriodExpired, PERIOD_CHECK_INTERVAL_MS);
+
+// Также проверяем при возврате вкладки/окна в фокус (на случай долгого простоя)
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible'){
+    checkPeriodExpired();
+  }
+});
+
+// Доп. защита от "зависания" источника в OBS: ровно через 24 часа полностью
+// перезагружаем страницу, а не только сбрасываем статистику. Это лечит
+// возможные утечки памяти/битые WebSocket-соединения при многодневной
+// непрерывной работе браузерного источника, из-за которых виджет мог
+// "багаться" — зависать, переставать обновляться и т.п.
+let periodReloadTimer = null;
+function scheduleReload(){
+  if(periodReloadTimer) clearTimeout(periodReloadTimer);
+  const msUntilReload = Math.max(60 * 1000, (periodStart + PERIOD_MS + 5000) - Date.now());
+  periodReloadTimer = setTimeout(() => {
+    location.reload();
+  }, msUntilReload);
+}
+
+// Защита от дублирующихся соединений: не даём открыть второй WebSocket,
+// если предыдущий ещё жив (например, при ручном повторном вызове connect()).
+const originalConnect = connect;
+connect = function(){
+  if(ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)){
+    try{ ws.close(); }catch(e){}
+  }
+  originalConnect();
+};
+
+// Загружаем статистику перед подключением
+loadStats();
+render();
+connect();
+scheduleReload();
+</script>
+</body>
+</html>
